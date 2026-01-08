@@ -216,6 +216,10 @@ npm run web
 - Configure profiles: set `PRERENDER_PROFILES="alice,bob"` to prerender `/profile/alice` and `/profile/bob`. If unset, it prerenders `/profile/example` as a placeholder. Client routing remains intact because Firebase Hosting rewrites other paths to `index.html`.
 - Sitemaps/robots: `npm run build:web:prerender` now generates `public/robots.txt` and `public/sitemap.xml` (copied to `dist/`) using `SITE_URL` (default `https://fencepost.net`) and `PRERENDER_PROFILES` for optional profile URLs.
 
+## SPA routing and deep links
+
+- Firebase Hosting rewrites all non-asset requests to `index.html` so deep links like `/Main/Feed` or profile routes load the SPA shell. Static assets are still served normally because Firebase prefers existing files before applying rewrites.
+
 ## License
 
 MIT
