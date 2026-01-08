@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Fence-Post-App",
+    "name": "FencePost",
     "slug": "Fence-Post-App",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -23,7 +23,22 @@
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "FencePost",
+      "shortName": "FencePost",
+      "description": "Social network for farmers to share field activities, costs, and insights",
+      "backgroundColor": "#F4F1E8",
+      "themeColor": "#1C3D2C",
+      "display": "standalone",
+      "orientation": "any",
+      "bundler": "metro",
+      "icons": [
+        {
+          "src": "./public/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
     }
   }
 }

@@ -1,0 +1,18 @@
+{
+  "name": "FencePost - Farmer Social Network",
+  "short_name": "FencePost",
+  "description": "Social network for farmers to share field activities, costs, and insights",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F4F1E8",
+  "theme_color": "#1C3D2C",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

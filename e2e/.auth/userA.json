@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "https://fencepost-65663.web.app",
+      "localStorage": [
+        {
+          "name": "firebase:authUser:AIzaSyA8qJ8V1zB0Or8zyVaktXX_6lYVJqbTp-A:[DEFAULT]",
+          "value": "{\"uid\":\"KBKcNTJCPiZpAwe7NS5WUEL452K3\",\"email\":\"e2e.user.a.1767674127756@example.com\",\"emailVerified\":false,\"isAnonymous\":false,\"providerData\":[{\"providerId\":\"password\",\"uid\":\"e2e.user.a.1767674127756@example.com\",\"displayName\":null,\"email\":\"e2e.user.a.1767674127756@example.com\",\"phoneNumber\":null,\"photoURL\":null}],\"stsTokenManager\":{\"refreshToken\":\"AMf-vBx_uAxf3SpehmqkZ60jE-f-_xdxtNW0Ep-JHHPemVTwioh2cvVN5viv6mF9g9NBgsdZDw5wgMpunh-ikB4LaE7s2vuLQgDxne-P0-3rAYtzkoOPJFBv3TUSmnAxvoYA8-NQ97fzKnRCAY97VqHcfoU9t6z5rOuWeHd_q1SHSh3Q2UVbNYN5R62GqbkqQcPAaN32o3EfnyadPvk1SWb-KZ4-hVx9wdI5YATuEKURUiEFmryNReQ\",\"accessToken\":\"eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ4Mjg5MmZhMzJlY2QxM2E0ZTBhZWZlNjI4ZGQ5YWFlM2FiYThlMWUiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vZmVuY2Vwb3N0LTY1NjYzIiwiYXVkIjoiZmVuY2Vwb3N0LTY1NjYzIiwiYXV0aF90aW1lIjoxNzY3ODEzOTIwLCJ1c2VyX2lkIjoiS0JLY05USkNQaVpwQXdlN05TNVdVRUw0NTJLMyIsInN1YiI6IktCS2NOVEpDUGlacEF3ZTdOUzVXVUVMNDUySzMiLCJpYXQiOjE3Njc4MTM5MjAsImV4cCI6MTc2NzgxNzUyMCwiZW1haWwiOiJlMmUudXNlci5hLjE3Njc2NzQxMjc3NTZAZXhhbXBsZS5jb20iLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZW1haWwiOlsiZTJlLnVzZXIuYS4xNzY3Njc0MTI3NzU2QGV4YW1wbGUuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.kBdl9QTc1JI4Gh3-pgaIoKhQPrBJ_vVtlW67QLHLuTk_FPevVTtfRBjECSSR9ij7JboI0SofE5uHVHic0eI1ujcNrxo63Y-ARvZ2CT3_L7Jl2I0gCz-LS-j9-c9EMpzR_nVAVACH0bgCliEQakFjTGFRuilPXNj0MprIclNVTYdILqRbI2S2qlm_rbo5JfZ67jmtejVK2EiyamB0AaLaZhXccyyi1p-qbas2w2Lf4nmAKJEfXsf_SKlDq6ERWtz3MtrBxK_whD4-qnQ2ouPvt6ZKsHHXAaDHSPUot7tTTGmdNtsn5qRNmZlyi2tyvI2fDOfZzOVAmbmjyCnCqsUrKw\",\"expirationTime\":1767817520020},\"createdAt\":\"1767674129113\",\"lastLoginAt\":\"1767813920444\",\"apiKey\":\"AIzaSyA8qJ8V1zB0Or8zyVaktXX_6lYVJqbTp-A\",\"appName\":\"[DEFAULT]\"}"
+        }
+      ]
+    }
+  ]
+}

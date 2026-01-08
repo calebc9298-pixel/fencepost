@@ -1,0 +1,636 @@
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, increment, onSnapshot, orderBy, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../config/firebase';
+import { useAuth } from './AuthContext';
+
+const PostContext = createContext({});
+
+export const usePost = () => useContext(PostContext);
+
+export const PostProvider = ({ children }) => {
+  const { user } = useAuth();
+  const [posts, setPosts] = useState([]);
+  const [userInteractions, setUserInteractions] = useState({
+    likedPosts: [],
+    dislikedPosts: [],
+    likedComments: [],
+    dislikedComments: [],
+  });
+  const [loading, setLoading] = useState(true);
+
+  // Fetch posts from Firestore
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      query(collection(db, 'posts'), orderBy('timestamp', 'desc')),
+      (snapshot) => {
+        const fetchedPosts = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().timestamp?.toDate() || new Date(),
+        }));
+        setPosts(fetchedPosts);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching posts:', error);
+        setLoading(false);
+      }
+    );
+
+    return unsubscribe;
+  }, []);
+
+  // Fetch user interactions
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchInteractions = async () => {
+      try {
+        const interactionsDoc = await getDoc(doc(db, 'userInteractions', user.uid));
+        if (interactionsDoc.exists()) {
+          setUserInteractions(interactionsDoc.data());
+        }
+      } catch (error) {
+        console.error('Error fetching interactions:', error);
+      }
+    };
+
+    fetchInteractions();
+  }, [user]);
+
+  const addPost = async (post) => {
+    if (!user) return;
+
+    try {
+      const newPost = {
+        ...post,
+        userId: user.uid,
+        timestamp: new Date(),
+        likes: 0,
+        dislikes: 0,
+        commentCount: 0,
+      };
+
+      await addDoc(collection(db, 'posts'), newPost);
+    } catch (error) {
+      console.error('Error adding post:', error);
+    }
+  };
+
+  const addComment = async (postId, commentText) => {
+    if (!user) return;
+
+    try {
+      const comment = {
+        postId,
+        userId: user.uid,
+        text: commentText,
+        timestamp: new Date(),
+        likes: 0,
+        dislikes: 0,
+        parentCommentId: null,
+      };
+
+      await addDoc(collection(db, 'comments'), comment);
+      
+      // Update post comment count
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        commentCount: increment(1)
+      });
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
+  const addReply = async (postId, parentCommentId, replyText) => {
+    if (!user) return;
+
+    try {
+      const reply = {
+        postId,
+        userId: user.uid,
+        text: replyText,
+        timestamp: new Date(),
+        likes: 0,
+        dislikes: 0,
+        parentCommentId,
+      };
+
+      await addDoc(collection(db, 'comments'), reply);
+      
+      // Update post comment count
+      const postRef = doc(db, 'posts', postId);
+      await updateDoc(postRef, {
+        commentCount: increment(1)
+      });
+    } catch (error) {
+      console.error('Error adding reply:', error);
+    }
+  };
+
+  const likePost = async (postId) => {
+    if (!user) return;
+
+    try {
+      const alreadyLiked = userInteractions.likedPosts.includes(postId);
+      const alreadyDisliked = userInteractions.dislikedPosts.includes(postId);
+
+      const postRef = doc(db, 'posts', postId);
+      const newInteractions = { ...userInteractions };
+
+      if (alreadyLiked) {
+        // Remove like
+        await updateDoc(postRef, { likes: increment(-1) });
+        newInteractions.likedPosts = newInteractions.likedPosts.filter(id => id !== postId);
+      } else {
+        // Add like
+        await updateDoc(postRef, { 
+          likes: increment(1),
+          ...(alreadyDisliked && { dislikes: increment(-1) })
+        });
+        newInteractions.likedPosts = [...newInteractions.likedPosts, postId];
+        if (alreadyDisliked) {
+          newInteractions.dislikedPosts = newInteractions.dislikedPosts.filter(id => id !== postId);
+        }
+      }
+
+      // Update user interactions in Firestore
+      await setDoc(doc(db, 'userInteractions', user.uid), newInteractions, { merge: true });
+      setUserInteractions(newInteractions);
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
+  const dislikePost = async (postId) => {
+    if (!user) return;
+
+    try {
+      const alreadyLiked = userInteractions.likedPosts.includes(postId);
+      const alreadyDisliked = userInteractions.dislikedPosts.includes(postId);
+
+      const postRef = doc(db, 'posts', postId);
+      const newInteractions = { ...userInteractions };
+
+      if (alreadyDisliked) {
+        // Remove dislike
+        await updateDoc(postRef, { dislikes: increment(-1) });
+        newInteractions.dislikedPosts = newInteractions.dislikedPosts.filter(id => id !== postId);
+      } else {
+        // Add dislike
+        await updateDoc(postRef, { 
+          dislikes: increment(1),
+          ...(alreadyLiked && { likes: increment(-1) })
+        });
+        newInteractions.dislikedPosts = [...newInteractions.dislikedPosts, postId];
+        if (alreadyLiked) {
+          newInteractions.likedPosts = newInteractions.likedPosts.filter(id => id !== postId);
+        }
+      }
+
+      // Update user interactions in Firestore
+      await setDoc(doc(db, 'userInteractions', user.uid), newInteractions, { merge: true });
+      setUserInteractions(newInteractions);
+    } catch (error) {
+      console.error('Error disliking post:', error);
+    }
+  };
+
+  const likeComment = async (commentId) => {
+    // Similar implementation for comments
+    console.log('Like comment not yet implemented with Firestore');
+  };
+
+  const dislikeComment = async (commentId) => {
+    // Similar implementation for comments
+    console.log('Dislike comment not yet implemented with Firestore');
+  };
+
+  return (
+    <PostContext.Provider value={{ 
+      posts, 
+      addPost, 
+      addComment, 
+      addReply, 
+      likeComment, 
+      dislikeComment, 
+      likePost, 
+      dislikePost, 
+      userInteractions,
+      loading 
+    }}>
+      {children}
+    </PostContext.Provider>
+  );
+};
+      id: '1',
+      type: 'simple',
+      text: 'First day of planting is always exciting! Weather looks perfect this week.',
+      chatRoom: 'regional',
+      timestamp: new Date(Date.now() - 3600000),
+      images: [],
+      likes: 12,
+      dislikes: 1,
+      username: 'cornhusker42',
+      comments: [
+        {
+          id: 'c1',
+          text: 'Same here! Getting started tomorrow morning.',
+          timestamp: new Date(Date.now() - 1800000),
+          likes: 3,
+          dislikes: 0,
+          replies: [],
+        },
+        {
+          id: 'c2',
+          text: 'Make sure to check soil temp, been a bit cooler than expected.',
+          timestamp: new Date(Date.now() - 900000),
+          likes: 5,
+          dislikes: 0,
+          replies: [
+            {
+              id: 'r1',
+              text: 'Good point, mine was 52 degrees this morning.',
+              timestamp: new Date(Date.now() - 600000),
+              likes: 2,
+              dislikes: 0,
+              replies: [
+                {
+                  id: 'r2',
+                  text: 'That should be warm enough for most varieties.',
+                  timestamp: new Date(Date.now() - 300000),
+                  likes: 1,
+                  dislikes: 0,
+                  replies: [],
+                }
+              ],
+            }
+          ],
+        },
+      ],
+    },
+    {
+      id: '2',
+      type: 'fencepost',
+      activity: 'planting',
+      chatRoom: 'regional',
+      data: {
+        crop: 'Corn',
+        variety: 'Pioneer 1234',
+        population: '32000',
+        rowWidth: '30',
+        acres: '120',
+      },
+      city: 'Ames',
+      state: 'IA',
+      zipCode: '50014',
+      timestamp: new Date(Date.now() - 7200000),
+      images: [],
+      likes: 8,
+      dislikes: 0,
+      username: 'iowafarm88',
+      comments: [
+        {
+          id: 'c3',
+          text: 'How has that variety been performing for you?',
+          timestamp: new Date(Date.now() - 3600000),
+          likes: 2,
+          dislikes: 0,
+          replies: [],
+        },
+      ],
+    },
+    {
+      id: '3',
+      type: 'simple',
+      text: 'Rain coming in tomorrow, had to finish up the west field today.',
+      chatRoom: 'statewide',
+      timestamp: new Date(Date.now() - 10800000),
+      images: [],
+      likes: 5,
+      dislikes: 0,
+      username: null, // This user chose to post anonymously
+      comments: [],
+    },
+    {
+      id: '4',
+      type: 'rainGauge',
+      rainfall: 1.25,
+      notes: 'Steady rain overnight, much needed!',
+      date: 'December 7, 2025',
+      city: 'Ames',
+      state: 'IA',
+      zipCode: '50014',
+      chatRoom: 'regional',
+      timestamp: new Date(Date.now() - 14400000),
+      likes: 15,
+      dislikes: 0,
+      username: 'weatherwatcher',
+      comments: [
+        {
+          id: 'c4',
+          text: 'We got about the same here, perfect timing!',
+          timestamp: new Date(Date.now() - 7200000),
+          likes: 4,
+          dislikes: 0,
+          replies: [],
+        },
+      ],
+    },
+    {
+      id: '5',
+      type: 'fencepost',
+      activity: 'marketing',
+      chatRoom: 'all',
+      data: {
+        crop: 'Corn',
+        bushels: '5000',
+        pricePerBushel: '4.25',
+        buyer: 'Local Co-op',
+        contractType: 'Cash Sale',
+        deliveryDate: 'December 10, 2025',
+      },
+      city: 'Ames',
+      state: 'IA',
+      zipCode: '50014',
+      timestamp: new Date(Date.now() - 18000000),
+      images: [],
+      likes: 22,
+      dislikes: 1,
+      username: 'cornhusker42',
+      comments: [
+        {
+          id: 'c5',
+          text: 'Nice price! I locked in at $4.10 last week.',
+          timestamp: new Date(Date.now() - 9000000),
+          likes: 8,
+          dislikes: 0,
+          replies: [],
+        },
+      ],
+    },
+  ]);
+
+  const addPost = (post) => {
+    const newPost = {
+      ...post,
+      id: Date.now().toString(),
+      timestamp: new Date(),
+      likes: 0,
+      dislikes: 0,
+      comments: [],
+    };
+    setPosts([newPost, ...posts]);
+  };
+
+  const addComment = (postId, comment) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          comments: [...post.comments, {
+            ...comment,
+            id: Date.now().toString(),
+            timestamp: new Date(),
+            likes: 0,
+            dislikes: 0,
+            replies: [],
+          }]
+        };
+      }
+      return post;
+    }));
+  };
+
+  const addReply = (postId, commentId, reply) => {
+    setPosts(posts.map(post => {
+      if (post.id === postId) {
+        return {
+          ...post,
+          comments: addReplyToComment(post.comments, commentId, {
+            ...reply,
+            id: Date.now().toString(),
+            timestamp: new Date(),
+            likes: 0,
+            dislikes: 0,
+            replies: [],
+          })
+        };
+      }
+      return post;
+    }));
+  };
+
+  // Helper function to recursively add reply to nested comments
+  const addReplyToComment = (comments, commentId, reply) => {
+    return comments.map(comment => {
+      if (comment.id === commentId) {
+        return {
+          ...comment,
+          replies: [...comment.replies, reply]
+        };
+      } else if (comment.replies && comment.replies.length > 0) {
+        return {
+          ...comment,
+          replies: addReplyToComment(comment.replies, commentId, reply)
+        };
+      }
+      return comment;
+    });
+  };
+
+  const likeComment = (postId, commentId) => {
+    // Check if already liked
+    if (userInteractions.likedComments.includes(commentId)) {
+      // Unlike
+      setUserInteractions({
+        ...userInteractions,
+        likedComments: userInteractions.likedComments.filter(id => id !== commentId)
+      });
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: likeCommentRecursive(post.comments, commentId, true)
+          };
+        }
+        return post;
+      }));
+    } else {
+      // Like
+      setUserInteractions({
+        ...userInteractions,
+        likedComments: [...userInteractions.likedComments, commentId],
+        dislikedComments: userInteractions.dislikedComments.filter(id => id !== commentId)
+      });
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: likeCommentRecursive(post.comments, commentId, false, userInteractions.dislikedComments.includes(commentId))
+          };
+        }
+        return post;
+      }));
+    }
+  };
+
+  // Helper function to recursively like nested comments
+  const likeCommentRecursive = (comments, commentId, isUnlike = false, wasDisliked = false) => {
+    return comments.map(comment => {
+      if (comment.id === commentId) {
+        if (isUnlike) {
+          return { ...comment, likes: Math.max(0, comment.likes - 1) };
+        } else {
+          return { 
+            ...comment, 
+            likes: comment.likes + 1,
+            dislikes: wasDisliked ? Math.max(0, comment.dislikes - 1) : comment.dislikes
+          };
+        }
+      } else if (comment.replies && comment.replies.length > 0) {
+        return {
+          ...comment,
+          replies: likeCommentRecursive(comment.replies, commentId, isUnlike, wasDisliked)
+        };
+      }
+      return comment;
+    });
+  };
+
+  const dislikeComment = (postId, commentId) => {
+    // Check if already disliked
+    if (userInteractions.dislikedComments.includes(commentId)) {
+      // Remove dislike
+      setUserInteractions({
+        ...userInteractions,
+        dislikedComments: userInteractions.dislikedComments.filter(id => id !== commentId)
+      });
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: dislikeCommentRecursive(post.comments, commentId, true)
+          };
+        }
+        return post;
+      }));
+    } else {
+      // Dislike
+      setUserInteractions({
+        ...userInteractions,
+        dislikedComments: [...userInteractions.dislikedComments, commentId],
+        likedComments: userInteractions.likedComments.filter(id => id !== commentId)
+      });
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: dislikeCommentRecursive(post.comments, commentId, false, userInteractions.likedComments.includes(commentId))
+          };
+        }
+        return post;
+      }));
+    }
+  };
+
+  // Helper function to recursively dislike nested comments
+  const dislikeCommentRecursive = (comments, commentId, isRemove = false, wasLiked = false) => {
+    return comments.map(comment => {
+      if (comment.id === commentId) {
+        if (isRemove) {
+          return { ...comment, dislikes: Math.max(0, comment.dislikes - 1) };
+        } else {
+          return { 
+            ...comment, 
+            dislikes: comment.dislikes + 1,
+            likes: wasLiked ? Math.max(0, comment.likes - 1) : comment.likes
+          };
+        }
+      } else if (comment.replies && comment.replies.length > 0) {
+        return {
+          ...comment,
+          replies: dislikeCommentRecursive(comment.replies, commentId, isRemove, wasLiked)
+        };
+      }
+      return comment;
+    });
+  };
+
+  const likePost = (postId) => {
+    // Check if already liked
+    if (userInteractions.likedPosts.includes(postId)) {
+      // Unlike
+      setUserInteractions({
+        ...userInteractions,
+        likedPosts: userInteractions.likedPosts.filter(id => id !== postId)
+      });
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return { ...post, likes: Math.max(0, post.likes - 1) };
+        }
+        return post;
+      }));
+    } else {
+      // Like
+      setUserInteractions({
+        ...userInteractions,
+        likedPosts: [...userInteractions.likedPosts, postId],
+        dislikedPosts: userInteractions.dislikedPosts.filter(id => id !== postId)
+      });
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          const wasDisliked = userInteractions.dislikedPosts.includes(postId);
+          return { 
+            ...post, 
+            likes: post.likes + 1,
+            dislikes: wasDisliked ? Math.max(0, post.dislikes - 1) : post.dislikes
+          };
+        }
+        return post;
+      }));
+    }
+  };
+
+  const dislikePost = (postId) => {
+    // Check if already disliked
+    if (userInteractions.dislikedPosts.includes(postId)) {
+      // Remove dislike
+      setUserInteractions({
+        ...userInteractions,
+        dislikedPosts: userInteractions.dislikedPosts.filter(id => id !== postId)
+      });
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return { ...post, dislikes: Math.max(0, post.dislikes - 1) };
+        }
+        return post;
+      }));
+    } else {
+      // Dislike
+      setUserInteractions({
+        ...userInteractions,
+        dislikedPosts: [...userInteractions.dislikedPosts, postId],
+        likedPosts: userInteractions.likedPosts.filter(id => id !== postId)
+      });
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          const wasLiked = userInteractions.likedPosts.includes(postId);
+          return { 
+            ...post, 
+            dislikes: post.dislikes + 1,
+            likes: wasLiked ? Math.max(0, post.likes - 1) : post.likes
+          };
+        }
+        return post;
+      }));
+    }
+  };
+
+  return (
+    <PostContext.Provider value={{ posts, addPost, addComment, addReply, likeComment, dislikeComment, likePost, dislikePost, userInteractions }}>
+      {children}
+    </PostContext.Provider>
+  );
+};

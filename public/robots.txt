@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://fencepost-65663.web.app/sitemap.xml

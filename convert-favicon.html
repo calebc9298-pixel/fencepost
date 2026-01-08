@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favicon Converter</title>
+</head>
+<body>
+    <h2>Fence Post Favicon Generator</h2>
+    <canvas id="canvas" width="512" height="512"></canvas>
+    <br><br>
+    <button onclick="downloadPNG()">Download as PNG</button>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Golden border frame
+        ctx.fillStyle = '#D4AF37';
+        ctx.fillRect(0, 0, 512, 512);
+        
+        ctx.fillStyle = '#1C3D2C';
+        ctx.fillRect(20, 20, 472, 472);
+        
+        // Left fence post
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(96, 116, 60, 280);
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(96, 158, 60, 80);
+        
+        // Middle fence post (taller)
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(226, 116, 60, 280);
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(226, 116, 60, 100);
+        
+        // Right fence post
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(356, 116, 60, 280);
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(356, 158, 60, 80);
+        
+        // Top horizontal rail
+        ctx.fillStyle = '#D4AF37';
+        ctx.fillRect(76, 240, 360, 26);
+        
+        // Bottom horizontal rail
+        ctx.fillRect(76, 320, 360, 26);
+        
+        // Post depth shading
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(96, 116, 4, 280);
+        ctx.fillRect(226, 116, 4, 280);
+        ctx.fillRect(356, 116, 4, 280);
+        
+        ctx.fillStyle = '#A0522D';
+        ctx.fillRect(152, 116, 4, 280);
+        ctx.fillRect(282, 116, 4, 280);
+        ctx.fillRect(412, 116, 4, 280);
+        
+        function downloadPNG() {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'favicon.png';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+    </script>
+</body>
+</html>
