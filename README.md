@@ -209,11 +209,11 @@ npm run web
 
 ## Web prerendering (SEO/share previews)
 
-- Tool: `react-snap` prerenders key SPA routes during `expo export`.
-- Target routes: `/`, `/Main/Feed`, and one sample profile `/profile/example` (update this list for real public profiles).
+- Tool: `react-snap` run via `scripts/prerender.js` after `expo export`.
+- Targets: `/`, `/Main/Feed`, and profile routes driven by `PRERENDER_PROFILES` env.
 - Build with prerender: `npm run build:web:prerender` (outputs static HTML into `dist`).
 - Deploy (uses prerendered build): `npm run deploy`.
-- Config: adjust `reactSnap.include` in `package.json` to list the exact profile slugs you want crawled (e.g., `/profile/jane-doe`). Client-side routing still works because Firebase Hosting rewrites everything else to `index.html`.
+- Configure profiles: set `PRERENDER_PROFILES="alice,bob"` to prerender `/profile/alice` and `/profile/bob`. If unset, it prerenders `/profile/example` as a placeholder. Client routing remains intact because Firebase Hosting rewrites other paths to `index.html`.
 
 ## License
 
