@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build:web": "expo export --platform web",
-    "deploy": "npm run build:web && firebase deploy --only hosting",
+    "build:web:prerender": "expo export --platform web && npx react-snap",
+    "deploy": "npm run build:web:prerender && firebase deploy --only hosting",
     "deploy:firestore": "firebase deploy --only firestore:indexes,firestore:rules",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test e2e/ui.spec.js",
@@ -25,7 +26,8 @@
     "@playwright/test": "^1.51.0",
     "cross-env": "^10.1.0",
     "dotenv": "^16.4.7",
-    "prettier": "^3.7.4"
+    "prettier": "^3.7.4",
+    "react-snap": "^1.23.0"
   },
   "dependencies": {
     "@expo-google-fonts/manrope": "^0.4.2",
@@ -51,6 +53,25 @@
     "react-native-safe-area-context": "^5.6.2",
     "react-native-screens": "^4.18.0",
     "react-native-web": "^0.21.0"
+  },
+  "reactSnap": {
+    "source": "dist",
+    "publicPath": "/",
+    "include": [
+      "/",
+      "/Main/Feed",
+      "/profile/example"
+    ],
+    "crawl": false,
+    "skipThirdPartyRequests": true,
+    "inlineCss": true,
+    "minifyHtml": {
+      "collapseWhitespace": true
+    },
+    "puppeteerArgs": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox"
+    ]
   },
   "private": true
 }
