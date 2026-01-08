@@ -1,11 +1,13 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, View, StyleSheet } from 'react-native';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './src/context/AuthContext';
 import { PostProvider } from './src/context/PostContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { colors } from './src/theme/tokens';
 import { initializeSentry } from './src/config/sentry';
+import { DefaultSEO } from './src/components/SEO';
 import {
   useFonts,
   Manrope_400Regular,
@@ -52,14 +54,21 @@ export default function App() {
     );
   }
 
-  return (
+  const appTree = (
     <AuthProvider>
       <PostProvider>
+        <DefaultSEO />
         <AppNavigator />
         <StatusBar style="auto" />
       </PostProvider>
     </AuthProvider>
   );
+
+  if (Platform.OS === 'web') {
+    return <HelmetProvider>{appTree}</HelmetProvider>;
+  }
+
+  return appTree;
 }
 
 const styles = StyleSheet.create({

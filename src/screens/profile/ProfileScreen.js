@@ -14,8 +14,9 @@ import { signOut } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
 import AppShell from '../../layout/AppShell';
+import { SEO } from '../../components/SEO';
 
-export default function ProfileScreen() {
+export default function ProfileScreen({ route }) {
   const {
     userProfile,
     fields,
@@ -39,6 +40,12 @@ export default function ProfileScreen() {
   const [newFieldName, setNewFieldName] = useState('');
   const [newFieldAcres, setNewFieldAcres] = useState('');
   const [newUsername, setNewUsername] = useState('');
+
+  const profileSlug =
+    (route?.params?.profileId || route?.params?.username || userProfile?.username || user?.uid || 'profile')
+      ?.toString?.()
+      ?.trim?.() || 'profile';
+  const canonicalPath = `/profile/${profileSlug}`;
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
@@ -192,8 +199,19 @@ export default function ProfileScreen() {
   const monthlyRainfall = getRainfallMonthlyTotal(currentYear, currentMonth);
   const monthName = new Date().toLocaleString('default', { month: 'long' });
 
+  const metaTitle = `${profileSlug} | FencePost Profile`;
+  const metaDescription = `View ${profileSlug}'s farm activity, rainfall, and field stats on FencePost.`;
+  const canonicalUrl = `https://fencepost.net${canonicalPath}`;
+
   return (
-    <AppShell title="Profile">
+    <>
+      <SEO
+        title={metaTitle}
+        description={metaDescription}
+        canonical={canonicalUrl}
+        url={canonicalUrl}
+      />
+      <AppShell title="Profile">
       <ScrollView style={styles.container}>
         <Text style={styles.title}>Profile</Text>
 
@@ -502,7 +520,8 @@ export default function ProfileScreen() {
           </View>
         </Modal>
       </ScrollView>
-    </AppShell>
+      </AppShell>
+    </>
   );
 }
 

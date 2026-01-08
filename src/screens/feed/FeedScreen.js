@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import { isAdmin } from '../../utils/adminUtils';
 import AppShell from '../../layout/AppShell';
 import PostCard from '../../components/PostCard';
+import { SEO } from '../../components/SEO';
 import { fonts } from '../../theme/fonts';
 import { uploadMultipleImages } from '../../utils/imageUpload';
 import { useFocusEffect } from '@react-navigation/native';
@@ -325,7 +326,14 @@ export default function FeedScreen({ navigation }) {
   };
 
   return (
-    <AppShell title="Feed" fullWidth>
+    <>
+      <SEO
+        title="FencePost Feed | Farmer Social Network"
+        description="See the latest farm updates from the FencePost community across the nation."
+        canonical="https://fencepost.net/Main/Feed"
+        url="https://fencepost.net/Main/Feed"
+      />
+      <AppShell title="Feed" fullWidth>
       <View style={styles.container}>
         {/* Top Bar */}
         <View style={styles.topBar}>
@@ -528,6 +536,7 @@ export default function FeedScreen({ navigation }) {
           )}
       </View>
     </AppShell>
+    </>
   );
 }
 
