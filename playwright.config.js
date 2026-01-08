@@ -32,7 +32,7 @@ module.exports = defineConfig({
   globalSetup: require.resolve('./e2e/global-setup'),
   ...(workers ? { workers } : {}),
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'https://fencepost-65663.web.app',
+    baseURL: process.env.E2E_BASE_URL || 'https://fencepost.net',
     headless: true,
     video: 'off',
     screenshot: 'only-on-failure',

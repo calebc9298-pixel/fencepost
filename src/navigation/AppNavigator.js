@@ -46,7 +46,7 @@ const navTheme = {
 };
 
 const linking = {
-  prefixes: [Linking.createURL('/'), 'https://fencepost-65663.web.app'],
+  prefixes: [Linking.createURL('/'), 'https://fencepost.net', 'https://www.fencepost.net'],
   config: {
     screens: {
       Comments: 'comments/:postId',
