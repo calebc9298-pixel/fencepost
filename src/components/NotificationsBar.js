@@ -18,38 +18,63 @@ import {
   limit,
 } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
+import AsyncState from './AsyncState';
 
 export default function NotificationsBar({ onNavigate, maxHeight = 220 }) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [retryToken, setRetryToken] = useState(0);
   const navigation = useNavigation();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      setNotifications([]);
+      setError(null);
+      return undefined;
+    }
     // Listen for likes and comments on user's posts
     const q = query(
       collection(db, 'notifications'),
       where('recipientId', '==', user.uid),
       limit(50)
     );
-    const unsub = onSnapshot(q, snapshot => {
-      const items = snapshot.docs.map(docSnap => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }));
-      const toMillis = ts => {
-        if (!ts) return 0;
-        if (typeof ts.toMillis === 'function') return ts.toMillis();
-        if (typeof ts.toDate === 'function') return ts.toDate().getTime();
-        if (typeof ts.seconds === 'number') return ts.seconds * 1000;
-        if (ts instanceof Date) return ts.getTime();
-        return 0;
-      };
-      items.sort((a, b) => toMillis(b.timestamp) - toMillis(a.timestamp));
-      setNotifications(items);
-    });
+    const unsub = onSnapshot(
+      q,
+      snapshot => {
+        const items = snapshot.docs.map(docSnap => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
+        const toMillis = ts => {
+          if (!ts) return 0;
+          if (typeof ts.toMillis === 'function') return ts.toMillis();
+          if (typeof ts.toDate === 'function') return ts.toDate().getTime();
+          if (typeof ts.seconds === 'number') return ts.seconds * 1000;
+          if (ts instanceof Date) return ts.getTime();
+          return 0;
+        };
+        items.sort((a, b) => toMillis(b.timestamp) - toMillis(a.timestamp));
+        setNotifications(items);
+        setLoading(false);
+        setError(null);
+      },
+      err => {
+        console.error('Notifications listener error:', err);
+        setError(err?.message || 'Failed to load notifications');
+        setLoading(false);
+      }
+    );
     return () => unsub();
-  }, [user]);
+  }, [user, retryToken]);
+
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    setRetryToken(t => t + 1);
+  };
 
   const handlePress = async item => {
     if (!user) return;
@@ -101,9 +126,22 @@ export default function NotificationsBar({ onNavigate, maxHeight = 220 }) {
       style={[styles.bar, maxHeight == null ? null : { maxHeight }]}
       testID="notifications-bar"
     >
-      {notifications.length === 0 ? (
-        <Text style={styles.empty}>No notifications yet.</Text>
-      ) : (
+      <AsyncState
+        loading={loading}
+        error={error}
+        errorMessage={error}
+        onRetry={handleRetry}
+        isEmpty={!loading && !error && notifications.length === 0}
+        emptyTitle="No notifications yet"
+        emptySubtitle="Likes and comments will appear here."
+        renderSkeleton={() => (
+          <View>
+            {[1, 2].map(i => (
+              <View key={i} style={styles.skeletonBlock} />
+            ))}
+          </View>
+        )}
+      >
         <FlatList
           data={[{ section: 'likes' }, { section: 'comments' }]}
           keyExtractor={(item) => item.section}
@@ -141,7 +179,7 @@ export default function NotificationsBar({ onNavigate, maxHeight = 220 }) {
             }
           }}
         />
-      )}
+      </AsyncState>
     </View>
   );
 }
@@ -210,5 +248,11 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginBottom: 12,
     paddingHorizontal: 8,
+  },
+  skeletonBlock: {
+    height: 52,
+    backgroundColor: '#eef1ef',
+    borderRadius: 8,
+    marginBottom: 10,
   },
 });

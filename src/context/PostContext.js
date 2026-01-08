@@ -35,6 +35,7 @@ export const PostProvider = ({ children }) => {
   const [userInteractions, setUserInteractions] = useState(defaultInteractions);
   const [loading, setLoading] = useState(true);
   const [postsError, setPostsError] = useState(null);
+  const [refreshToken, setRefreshToken] = useState(0);
 
   // Fetch posts from Firestore
   useEffect(() => {
@@ -94,7 +95,13 @@ export const PostProvider = ({ children }) => {
     return () => {
       unsub?.();
     };
-  }, [activeRoom, user, authLoading]);
+  }, [activeRoom, user, authLoading, refreshToken]);
+
+  const refreshPosts = () => {
+    setPostsError(null);
+    setLoading(true);
+    setRefreshToken(token => token + 1);
+  };
 
   // Fetch user interactions
   useEffect(() => {
@@ -540,6 +547,7 @@ export const PostProvider = ({ children }) => {
         postsError,
         activeRoom,
         setActiveRoom,
+        refreshPosts,
         addPost,
         deletePost,
         deleteComment,

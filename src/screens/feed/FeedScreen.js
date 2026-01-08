@@ -20,6 +20,7 @@ import { useAuth } from '../../context/AuthContext';
 import { isAdmin } from '../../utils/adminUtils';
 import AppShell from '../../layout/AppShell';
 import PostCard from '../../components/PostCard';
+import AsyncState from '../../components/AsyncState';
 import { SEO } from '../../components/SEO';
 import { fonts } from '../../theme/fonts';
 import { uploadMultipleImages } from '../../utils/imageUpload';
@@ -37,6 +38,7 @@ export default function FeedScreen({ navigation }) {
     posts,
     postsError,
     loading: postsLoading,
+    refreshPosts,
     addPost,
     deletePost,
     likePost,
@@ -512,28 +514,33 @@ export default function FeedScreen({ navigation }) {
         </Modal>
 
         {/* Feed Content */}
-        {postsError ? (
+        <AsyncState
+          loading={postsLoading}
+          error={postsError}
+          errorMessage={postsError}
+          onRetry={refreshPosts}
+          isEmpty={!postsLoading && !postsError && finalPosts.length === 0}
+          emptyTitle="No posts yet"
+          emptySubtitle="Be the first to post!"
+          renderSkeleton={() => (
             <View style={styles.feedContainer}>
-              <Text style={styles.emptyText}>Couldn't load posts</Text>
-              <Text style={styles.emptySubtext}>{postsError}</Text>
-            </View>
-          ) : postsLoading ? (
-            <View style={styles.feedContainer}>
-              <Text style={styles.emptyText}>Loading posts…</Text>
-            </View>
-          ) : finalPosts.length > 0 ? (
-            <FlatList
-              data={finalPosts}
-              renderItem={renderPost}
-              keyExtractor={item => item.id}
-              contentContainerStyle={styles.feedList}
-            />
-          ) : (
-            <View style={styles.feedContainer}>
-              <Text style={styles.emptyText}>No posts yet</Text>
-              <Text style={styles.emptySubtext}>Be the first to post!</Text>
+              {[1, 2, 3].map(i => (
+                <View key={i} style={styles.skeletonCard}>
+                  <View style={styles.skeletonLineWide} />
+                  <View style={styles.skeletonLine} />
+                  <View style={styles.skeletonLine} />
+                </View>
+              ))}
             </View>
           )}
+        >
+          <FlatList
+            data={finalPosts}
+            renderItem={renderPost}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.feedList}
+          />
+        </AsyncState>
       </View>
     </AppShell>
     </>
@@ -544,6 +551,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F4F1E8', // Theme bg color for feed background
+  },
+  skeletonCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  skeletonLineWide: {
+    height: 14,
+    backgroundColor: '#e7ebea',
+    borderRadius: 6,
+    marginBottom: 10,
+    width: '60%',
+  },
+  skeletonLine: {
+    height: 12,
+    backgroundColor: '#eef1ef',
+    borderRadius: 6,
+    marginBottom: 8,
+    width: '90%',
   },
   topBar: {
     flexDirection: 'row',
